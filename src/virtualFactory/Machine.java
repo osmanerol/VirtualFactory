@@ -4,9 +4,9 @@ import java.net.*;
 import java.util.*;
 
 public class Machine extends Thread {
-	public static String id, name, type, status;
-	public static float speed;
-	public static boolean isEmpty = true, isConnected = false;
+	public String id, name, type, status = "EMPTY";
+	public float speed;
+	public boolean isEmpty = true, isConnected = false;
 	private static InetAddress host;
 	private static final int PORT = 5000;
 	
@@ -26,6 +26,9 @@ public class Machine extends Thread {
 		String request, response;
 		// komutlarý dizi olarak tutacak
 		String[]  command;
+		Machine machine = new Machine();
+		Scanner input = null;
+		PrintWriter output = null;
 		try {
 			// ilk komut create islemi mi kontrolu
 			do {
@@ -39,11 +42,11 @@ public class Machine extends Thread {
 					System.out.println("400 - Hatalý komut"); 
 				}
 				else {
-					name = command[1];
-					type = command[2];
-					speed = Float.parseFloat(command[3]);
+					machine.name = command[1];
+					machine.type = command[2];
+					machine.speed = Float.parseFloat(command[3]);
 				}
-			} while(command[0].compareTo("CREATE") != 0);
+			} while(command[0].compareTo("CREATE") != 0 || command.length != 4);
 			// create girildikten sonra socket baglantisi
 			do {
 				System.out.print("Machine > ");
@@ -52,19 +55,23 @@ public class Machine extends Thread {
 				if(command[0].compareTo("CONNECT") != 0) {
 					System.out.println("501 - Sunucuya baglanilamadi"); 
 				}
+				else if(command[0].compareTo("CONNECT") != 0 && command.length != 1) {
+					System.out.println("400 - Hatalý komut");
+				}
 				else {
 					// connect komutundan sonra server'a baglanma
 					link = new Socket(host, PORT);
-					Scanner input = new Scanner(link.getInputStream());
-					PrintWriter output = new PrintWriter(link.getOutputStream(), true);
+					input = new Scanner(link.getInputStream());
+					output = new PrintWriter(link.getOutputStream(), true);
+					request = "CONNECT " + machine.name + " " +  machine.type + " " + machine.speed + " " + machine.status; 
 					output.println(machineRequest(request));
 					response = input.nextLine();
+					System.out.println(response);
 					command = response.split(" ");
-					id = command[command.length -1];
-					isConnected = true;
-					System.out.printf("%s %s %s %f\n", id, name, type, speed);
+					machine.id = command[command.length -1];
+					machine.isConnected = true;
 				}
-			} while(command[0].compareTo("CONNECT") != 0);
+			} while(command[0].compareTo("CONNECT") != 0 && !machine.isConnected);
 			// create komutundan sonra diger komutlar
 			do {
 				System.out.print("Machine > ");
@@ -74,14 +81,17 @@ public class Machine extends Thread {
 					System.out.println("400 - Hatalý komut"); 
 				}
 				else {
-					
+					request = "" + request + " " + machine.id;
+					output.println(machineRequest(request));
+					response = input.nextLine();
+					System.out.println(response);
 				}
 			} while(command[0].compareTo("CLOSE") != 0);
 		} catch(IOException ioException) {
 			ioException.printStackTrace();
 		}
 	}
-	
+
 	private static String machineRequest(String request) {
 		return request +" 1";
 	}
