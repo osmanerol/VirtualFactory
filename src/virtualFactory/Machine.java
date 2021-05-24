@@ -12,7 +12,7 @@ public class Machine extends Thread {
 	private static InetAddress host;
 	private static final int PORT = 5000;
 	
-	public static void main(String[] args) throws IOException, JSONException {
+	public static void main(String[] args) throws IOException, JSONException, NumberFormatException, InterruptedException {
 		try {
 			host = InetAddress.getLocalHost();
 		} catch(UnknownHostException ex) {
@@ -22,7 +22,7 @@ public class Machine extends Thread {
 		accessServer();
 	}
 	
-	private static void accessServer() throws IOException, JSONException {
+	private static void accessServer() throws IOException, JSONException, NumberFormatException, InterruptedException {
 		Scanner machineInput = new Scanner(System.in);
 		String request, line;
 		String[]  command;
@@ -66,7 +66,33 @@ public class Machine extends Thread {
 				machine.id = responsePayload.getString("id");
 				machine.isConnected = true;
 				System.out.println(readerJson.toString());
+				// after connect request , wait server work message
+				do {
+					line = reader.readLine();
+					readerJson = new JSONObject(line);
+					System.out.println(readerJson.toString());
+					responsePayload = readerJson.getJSONObject("payload");
+					String length = responsePayload.getString("length");
+					String jobId = responsePayload.getString("jobId");
+					machine.status = "BUSY";
+					sleep((long) (Float.parseFloat(length) * machine.speed * 60000));
+					machine.status = "EMPTY";
+					clearJsonObject(writeJson);
+					writeJson.put("method", "FINISH");
+					writeJson.put("type", 1);
+					payload = new JSONObject();
+					payload.put("machineId", machine.id);
+					payload.put("jobId", jobId);
+					writeJson.put("payload", payload);
+					output.write(writeJson.toString() + "\n");
+					output.flush();
+					line = reader.readLine();
+					readerJson = new JSONObject(line);
+					System.out.println(readerJson.toString());
+				} while(true);
 			}
+		} while(command[0].compareTo("CLOSE") != 0);
+			/*
 			else if(command[0].compareTo("CLOSE") == 0) {
 				output.write(writeJson.toString() + "\n");
 				output.flush();
@@ -76,6 +102,7 @@ public class Machine extends Thread {
 				System.out.println(readerJson.toString());
 			}
 		} while(command[0].compareTo("CLOSE") != 0);
+		*/
 		socket.close();
 		System.exit(1);
 	}

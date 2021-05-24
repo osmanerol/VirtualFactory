@@ -12,7 +12,10 @@ public interface Buffer {
 	public String isUserExists(String username, String password) throws InterruptedException;
 	public void addJob(Job newJob) throws InterruptedException;
 	public String detectMachine(String type) throws InterruptedException;
+	public void updateMachineList(String machineId) throws InterruptedException;
 	public Job[] getMachineJobList(String id) throws InterruptedException;
+	public void updateJob(String jobId) throws InterruptedException;
+	public String[] getPendingJob(String machineId) throws InterruptedException;
 	public Job[] getPendingMachineJobList(String type) throws InterruptedException;
 	public Job[] getPendingAllMachineJobList() throws InterruptedException;
 	public void addPlanner(String id, Socket planner) throws InterruptedException;

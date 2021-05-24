@@ -192,7 +192,8 @@ public class Planner extends Thread {
 						System.out.println("{\"message\":\"Once oturum acmalisiniz\",\"status\":\"401\"}");
 					}
 				}
-			}else if(planner.isLoggedIn && command[0].compareTo("PENDING") == 0) {
+			}
+			else if(planner.isLoggedIn && command[0].compareTo("PENDING") == 0) {
 				if(command.length != 2) {
 					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
 				}

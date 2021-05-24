@@ -43,7 +43,6 @@ public class Resource implements Buffer {
 	}
 	
 	public synchronized void removeMachine(String id) throws InterruptedException {
-		System.out.println(id);
 		int deletedIndex = 0;
 		for (int i = 0; i < this.machineList.size(); i++) {
 			if(this.machineList.get(i).id == id) {
@@ -107,6 +106,15 @@ public class Resource implements Buffer {
 		this.jobList.add(newJob);
 		notify();
 	}
+
+	public synchronized void updateJob(String jobId) throws InterruptedException {
+		for (int i = 0; i < this.jobList.size(); i++) {
+			if(this.jobList.get(i).id.equals(jobId)) {
+				this.jobList.get(i).status = "FINISHED";
+			}
+		}
+		notify();
+	}
 	
 	public String detectMachine(String type) throws InterruptedException {
 		boolean isMachineExists = false;
@@ -123,6 +131,36 @@ public class Resource implements Buffer {
 			return "0";
 		}
 		return "-1";
+	}
+	
+	public String[] getPendingJob(String machineId) throws InterruptedException {
+		String type = null;
+		for (int i = 0; i < this.machineList.size(); i++) {
+			if(this.machineList.get(i).id.equals(machineId)) {
+				type = this.machineList.get(i).type;
+			}
+		}
+		for (int i = 0; i < this.jobList.size(); i++) {
+			if(this.jobList.get(i).type.equals(type) && this.jobList.get(i).status.equals("PENDING")) {
+				for (int j = 0; j < this.machineList.size(); j++) {
+					if(this.machineList.get(j).id.equals(this.jobList.get(i).machineId)) {
+						this.machineList.get(j).status = "BUSY";
+					}
+				}
+				this.jobList.get(i).status = "STARTED";
+				String[] response = { this.jobList.get(i).id, this.jobList.get(i).length.toString()};
+				return response;
+			}
+		}
+		return null;
+	}
+	
+	public void updateMachineList(String machineId) throws InterruptedException {
+		for (int i = 0; i < this.machineList.size(); i++) {
+			if(this.machineList.get(i).id.equals(machineId)) {
+				this.machineList.get(i).status = "EMPTY";
+			}
+		}
 	}
 
 	public Job[] getMachineJobList(String id) throws InterruptedException {
@@ -165,6 +203,5 @@ public class Resource implements Buffer {
 			}
 		}
 	}
-
 
 }

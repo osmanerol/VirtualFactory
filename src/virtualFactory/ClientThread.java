@@ -67,7 +67,32 @@ public class ClientThread extends Thread {
 							output.write(writeJson.toString() + "\n");
 							output.flush();
 							// add machineList
-							this.source.addPlanner(nextId, this.client);
+							this.source.addMachine(nextId, this.client);
+							break;
+						case "FINISH" :
+							payload = readerJson.getJSONObject("payload");
+							machineId = payload.getString("machineId");
+							String jobId = payload.getString("jobId");
+							this.source.updateJob(jobId);
+							this.source.updateMachineList(machineId);
+							Socket client = this.source.getMachine(machineId);
+							writeJson.put("status", "200");
+							writeJson.put("message", "Ýs tamamlandi. Durum güncellendi");
+							OutputStreamWriter finishOutput = new OutputStreamWriter(client.getOutputStream(), "UTF-8");
+							finishOutput.write(writeJson.toString() + "\n");
+							finishOutput.flush();
+							// is any pending job with same type
+							String[] job = this.source.getPendingJob(machineId);
+							if(job != null) {
+								writeJson.put("status", "200");
+								writeJson.put("message", "Ýs baslatildi");
+								writePayload = new JSONObject();
+								writePayload.put("jobId", job[0]);
+								writePayload.put("length", job[1]);
+								writeJson.put("payload", writePayload);
+								finishOutput.write(writeJson.toString() + "\n");
+								finishOutput.flush();
+							}
 							break;
 						case "CLOSE" :
 							this.source.decrementMachineId();
@@ -106,7 +131,7 @@ public class ClientThread extends Thread {
 								payload = new JSONObject();
 								payload.put("id", id);
 								writeJson.put("payload", payload);
-								// add machineList
+								// add planerList
 								this.source.addPlanner(id, this.client);
 							}
 							output.write(writeJson.toString() + "\n");
@@ -166,20 +191,34 @@ public class ClientThread extends Thread {
 								writeJson.put("message", "Bosta makine yok. Emir listeye eklendi");
 								Job job = new Job(this.source.nextJobId, plannerId, machineId, machineType, length, new String("PENDING"));
 								this.source.addJob(job);
+								output.write(writeJson.toString() + "\n");
+								output.flush();
 							}
 							else if(machineId.equals("-1")) {
 								writeJson.put("status", "405");
 								writeJson.put("message", "Girilen tipte makine bulunamadi");
+								output.write(writeJson.toString() + "\n");
+								output.flush();
 							}
 							else {
 								Job job = new Job(this.source.nextJobId, plannerId, machineId, machineType, length, new String("STARTED"));
 								this.source.addJob(job);
 								writeJson.put("status", "200");
-								writeJson.put("message", "Ýslem baslatildi");
+								writeJson.put("message", "Ýs baslatildi");
+								output.write(writeJson.toString() + "\n");
+								output.flush();
+								Socket client = this.source.getMachine(machineId);
+								OutputStreamWriter finishOutput = new OutputStreamWriter(client.getOutputStream(), "UTF-8");
+								writeJson.put("status", "200");
+								writeJson.put("message", "Ýs baslatildi");
+								JSONObject writePayload = new JSONObject();
+								writePayload.put("length", String.valueOf(length));
+								writePayload.put("jobId", this.source.nextJobId);
+								writeJson.put("payload", writePayload);
+								finishOutput.write(writeJson.toString() + "\n");
+								finishOutput.flush();
 							}
 							this.source.incrementJobId();
-							output.write(writeJson.toString() + "\n");
-							output.flush();
 							break;
 						case "STATUS":
 							readPayload = readerJson.getJSONObject("payload");
