@@ -1,4 +1,6 @@
 package virtualFactory;
+import org.json.JSONException;
+import org.json.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -10,7 +12,7 @@ public class Machine extends Thread {
 	private static InetAddress host;
 	private static final int PORT = 5000;
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, JSONException {
 		try {
 			host = InetAddress.getLocalHost();
 		} catch(UnknownHostException ex) {
@@ -20,80 +22,67 @@ public class Machine extends Thread {
 		accessServer();
 	}
 	
-	private static void accessServer() {
-		Socket link = null;
+	private static void accessServer() throws IOException, JSONException {
 		Scanner machineInput = new Scanner(System.in);
-		String request, response;
-		// komutlarý dizi olarak tutacak
+		String request, line;
 		String[]  command;
 		Machine machine = new Machine();
-		Scanner input = null;
-		PrintWriter output = null;
-		try {
-			// ilk komut create islemi mi kontrolu
-			do {
-				System.out.print("Machine > ");
-				request = machineInput.nextLine();
-				command = request.split(" ");
-				if(command[0].compareTo("CREATE") != 0) {
-					System.out.println("400 - Hatalý komut"); 
-				}
-				else if (command.length != 4) {
-					System.out.println("400 - Hatalý komut"); 
+		Socket socket = new Socket(host, PORT);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+		OutputStreamWriter output = new OutputStreamWriter(socket.getOutputStream(), "UTF-8");
+		JSONObject readerJson = new JSONObject();
+		JSONObject writeJson = new JSONObject();
+		do {
+			clearJsonObject(readerJson);
+			clearJsonObject(writeJson);
+			System.out.printf("Machine > ");
+			request = machineInput.nextLine();
+			command = request.split(" ");
+			writeJson.put("method", command[0]);
+			writeJson.put("type", 1);
+			if(command[0].compareTo("CREATE") == 0) {
+				if(command.length != 4) {
+					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
 				}
 				else {
 					machine.name = command[1];
 					machine.type = command[2];
 					machine.speed = Float.parseFloat(command[3]);
+					System.out.println("{\"message\":\"Makine olusturuldu\",\"status\":\"201\"}");
 				}
-			} while(command[0].compareTo("CREATE") != 0 || command.length != 4);
-			// create girildikten sonra socket baglantisi
-			do {
-				System.out.print("Machine > ");
-				request = machineInput.nextLine();
-				command = request.split(" ");
-				if(command[0].compareTo("CONNECT") != 0) {
-					System.out.println("501 - Sunucuya baglanilamadi"); 
-				}
-				else if(command[0].compareTo("CONNECT") != 0 && command.length != 1) {
-					System.out.println("400 - Hatalý komut");
-				}
-				else {
-					// connect komutundan sonra server'a baglanma
-					link = new Socket(host, PORT);
-					input = new Scanner(link.getInputStream());
-					output = new PrintWriter(link.getOutputStream(), true);
-					request = "CONNECT " + machine.name + " " +  machine.type + " " + machine.speed + " " + machine.status; 
-					output.println(machineRequest(request));
-					response = input.nextLine();
-					System.out.println(response);
-					command = response.split(" ");
-					machine.id = command[command.length -1];
-					machine.isConnected = true;
-				}
-			} while(command[0].compareTo("CONNECT") != 0 && !machine.isConnected);
-			// create komutundan sonra diger komutlar
-			do {
-				System.out.print("Machine > ");
-				request = machineInput.nextLine();
-				command = request.split(" ");
-				if(command[0].compareTo("CLOSE") != 0) {
-					System.out.println("400 - Hatalý komut"); 
-				}
-				else {
-					request = "" + request + " " + machine.id;
-					output.println(machineRequest(request));
-					response = input.nextLine();
-					System.out.println(response);
-				}
-			} while(command[0].compareTo("CLOSE") != 0);
-		} catch(IOException ioException) {
-			ioException.printStackTrace();
-		}
+			}
+			else if(command[0].compareTo("CONNECT") == 0) {
+				JSONObject payload = new JSONObject();
+				payload.put("name", machine.name);
+				payload.put("type", machine.type);
+				payload.put("speed", String.valueOf(machine.speed));
+				payload.put("status", machine.status);
+				writeJson.put("payload", payload);
+				output.write(writeJson.toString() + "\n");
+				output.flush();
+				line = reader.readLine();
+				readerJson = new JSONObject(line);
+				JSONObject responsePayload = readerJson.getJSONObject("payload");
+				machine.id = responsePayload.getString("id");
+				machine.isConnected = true;
+				System.out.println(readerJson.toString());
+			}
+			else if(command[0].compareTo("CLOSE") == 0) {
+				output.write(writeJson.toString() + "\n");
+				output.flush();
+				line = reader.readLine();
+				readerJson = new JSONObject(line);
+				machine.isConnected = false;
+				System.out.println(readerJson.toString());
+			}
+		} while(command[0].compareTo("CLOSE") != 0);
+		socket.close();
+		System.exit(1);
 	}
-
-	private static String machineRequest(String request) {
-		return request +" 1";
+	
+	private static void clearJsonObject(JSONObject jsonObject) {
+		while(jsonObject.length()>0)
+			jsonObject.remove((String) jsonObject.keys().next());
 	}
 	
 }
