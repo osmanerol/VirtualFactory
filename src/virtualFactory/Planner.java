@@ -41,7 +41,7 @@ public class Planner extends Thread {
 			writeJson.put("type", 2);
 			if(command[0].compareTo("LOGIN") == 0) {
 				if(command.length != 3) {
-					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
+					System.out.println("Hatali komut girdiniz.");
 				}
 				else {
 					if(!planner.isLoggedIn) {
@@ -67,157 +67,141 @@ public class Planner extends Thread {
 						}
 					}
 					else {
-						System.out.println("{\"message\":\"Zaten oturum actiniz\",\"status\":\"400\"}");
+						System.out.println("Zaten oturum actiniz.");
 					}
 				}
 			}
-			else if(command[0].compareTo("LIST") == 0) {
-				if(command.length != 1) {
-					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
-				}
-				else {
-					if(planner.isLoggedIn) {
-						output.write(writeJson.toString() + "\n");
-						output.flush();
-						line = reader.readLine();
-						readerJson = new JSONObject(line);
-						JSONObject responsePayload = readerJson.getJSONObject("payload");
-						status = readerJson.getString("status");
-						JSONArray list = responsePayload.getJSONArray("list");
-						System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t%s\n", "Id", "Ad", "Tur", "Uretim Hizi", "Durum");
-						System.out.println("------------------------------------------------------------------------------------------");
-						for (int i = 0; i < list.length(); i++) {
-							JSONObject machine = (JSONObject) list.get(i);
-							System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t\t%s\n", machine.get("id"), machine.get("name"), machine.get("type"), machine.get("speed"), machine.get("status"));	
+			else if(command[0].compareTo("LOGIN") != 0) {
+				if(planner.isLoggedIn) {
+					if(command[0].compareTo("LIST") == 0) {
+						if(command.length != 1) {
+							System.out.println("Hatali komut girdiniz.");
+						}
+						else {
+							output.write(writeJson.toString() + "\n");
+							output.flush();
+							line = reader.readLine();
+							readerJson = new JSONObject(line);
+							JSONObject responsePayload = readerJson.getJSONObject("payload");
+							status = readerJson.getString("status");
+							JSONArray list = responsePayload.getJSONArray("list");
+							System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t%s\n", "Id", "Ad", "Tur", "Uretim Hizi", "Durum");
+							System.out.println("------------------------------------------------------------------------------------------");
+							for (int i = 0; i < list.length(); i++) {
+								JSONObject machine = (JSONObject) list.get(i);
+								System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t\t%s\n", machine.get("id"), machine.get("name"), machine.get("type"), machine.get("speed"), machine.get("status"));	
+							}
+						}
+					} 
+					else if( command[0].compareTo("TYPE") == 0) {
+						if(command.length != 2) {
+							System.out.println("Hatali komut girdiniz.");
+						}
+						else {
+							JSONObject payload = new JSONObject();
+							payload.put("type", command[1]);
+							writeJson.put("payload", payload);
+							output.write(writeJson.toString() + "\n");
+							output.flush();
+							line = reader.readLine();
+							readerJson = new JSONObject(line);
+							JSONObject responsePayload = readerJson.getJSONObject("payload");
+							status = readerJson.getString("status");
+							JSONArray list = responsePayload.getJSONArray("list");
+							System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t%s\n", "Id", "Ad", "Tur", "Uretim Hizi", "Durum");
+							System.out.println("------------------------------------------------------------------------------------------");
+							for (int i = 0; i < list.length(); i++) {
+								JSONObject machine = (JSONObject) list.get(i);
+								System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t\t%s\n", machine.get("id"), machine.get("name"), machine.get("type"), machine.get("speed"), machine.get("status"));	
+							}
+						}
+					} 
+					else if(command[0].compareTo("CLOSE") == 0) {
+						if(command.length != 1) {
+							System.out.println("Hatali komut girdiniz.");
+						}
+						else {
+							JSONObject payload = new JSONObject();
+							payload.put("id", planner.id);
+							writeJson.put("payload", payload);
+							output.write(writeJson.toString() + "\n");
+							output.flush();
+							line = reader.readLine();
+							readerJson = new JSONObject(line);
+							System.out.println(readerJson.toString());
+						}
+					}
+					else if(command[0].compareTo("CREATE") == 0) {
+						if(command.length != 3) {
+							System.out.println("Hatali komut girdiniz.");
+						}
+						else {
+							JSONObject payload = new JSONObject();
+							payload.put("type", command[1]);
+							payload.put("length", command[2]);
+							payload.put("planner", planner.id);
+							writeJson.put("payload", payload);
+							output.write(writeJson.toString() + "\n");
+							output.flush();
+							line = reader.readLine();
+							readerJson = new JSONObject(line);
+							System.out.println(readerJson.toString());
+						}
+					}
+					else if(command[0].compareTo("STATUS") == 0) {
+						if(command.length != 2) {
+							System.out.println("Hatali komut girdiniz.");
+						}
+						else {
+							JSONObject payload = new JSONObject();
+							payload.put("machineId", command[1]);
+							writeJson.put("payload", payload);
+							output.write(writeJson.toString() + "\n");
+							output.flush();
+							line = reader.readLine();
+							readerJson = new JSONObject(line);
+							JSONObject responsePayload = readerJson.getJSONObject("payload");
+							JSONArray list = responsePayload.getJSONArray("list");
+							System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t%s\t\t%s\n", "Id", "Planlamacý Id", "Makine Id", "Tur", "Uzunluk", "Durum");
+							System.out.println("-------------------------------------------------------------------------------------------------------------------------");
+							for (int i = 0; i < list.length(); i++) {
+								JSONObject job = (JSONObject) list.get(i);
+								System.out.printf("%s\t\t%s\t\t\t%s\t\t\t%s\t\t%s\t\t%s\n", job.get("id"), job.get("plannerId"), job.get("machineId"), job.get("type"), job.get("length"), job.get("status"));	
+							}
+						}
+					}
+					else if(command[0].compareTo("PENDING") == 0) {
+						if(command.length != 2) {
+							System.out.println("Hatali komut girdiniz.");
+						}
+						else {
+							JSONObject payload = new JSONObject();
+							payload.put("type", command[1]);
+							writeJson.put("payload", payload);
+							output.write(writeJson.toString() + "\n");
+							output.flush();
+							line = reader.readLine();
+							readerJson = new JSONObject(line);
+							JSONObject responsePayload = readerJson.getJSONObject("payload");
+							JSONArray list = responsePayload.getJSONArray("list");
+							System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t%s\t\t%s\n", "Id", "Planlamacý Id", "Makine Id", "Tur", "Uzunluk", "Durum");
+							System.out.println("-------------------------------------------------------------------------------------------------------------------------");
+							for (int i = 0; i < list.length(); i++) {
+								JSONObject job = (JSONObject) list.get(i);
+								System.out.printf("%s\t\t%s\t\t\t%s\t\t\t%s\t\t%s\t\t%s\n", job.get("id"), job.get("plannerId"), job.get("machineId"), job.get("type"), job.get("length"), job.get("status"));	
+							}
 						}
 					}
 					else {
-						System.out.println("{\"message\":\"Once oturum acmalisiniz\",\"status\":\"401\"}");
-					}
-				}
-			} 
-			else if( command[0].compareTo("TYPE") == 0) {
-				if(command.length != 2) {
-					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
-				}
-				else {
-					if(planner.isLoggedIn) {
-						JSONObject payload = new JSONObject();
-						payload.put("type", command[1]);
-						writeJson.put("payload", payload);
-						output.write(writeJson.toString() + "\n");
-						output.flush();
-						line = reader.readLine();
-						readerJson = new JSONObject(line);
-						JSONObject responsePayload = readerJson.getJSONObject("payload");
-						status = readerJson.getString("status");
-						JSONArray list = responsePayload.getJSONArray("list");
-						System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t%s\n", "Id", "Ad", "Tur", "Uretim Hizi", "Durum");
-						System.out.println("------------------------------------------------------------------------------------------");
-						for (int i = 0; i < list.length(); i++) {
-							JSONObject machine = (JSONObject) list.get(i);
-							System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t\t%s\n", machine.get("id"), machine.get("name"), machine.get("type"), machine.get("speed"), machine.get("status"));	
-						}
-					}
-					else {
-						System.out.println("{\"message\":\"Once oturum acmalisiniz\",\"status\":\"401\"}");
-					}
-				}
-			} 
-			else if(planner.isLoggedIn && command[0].compareTo("CLOSE") == 0) {
-				if(command.length != 1) {
-					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
-				}
-				else {
-					if(planner.isLoggedIn) {
-						JSONObject payload = new JSONObject();
-						payload.put("id", planner.id);
-						writeJson.put("payload", payload);
 						output.write(writeJson.toString() + "\n");
 						output.flush();
 						line = reader.readLine();
 						readerJson = new JSONObject(line);
 						System.out.println(readerJson.toString());
 					}
-					else {
-						System.out.println("{\"message\":\"Once oturum acmalisiniz\",\"status\":\"401\"}");
-					}
-				}
-			}
-			else if(planner.isLoggedIn && command[0].compareTo("CREATE") == 0) {
-				if(command.length != 3) {
-					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
 				}
 				else {
-					if(planner.isLoggedIn) {
-						JSONObject payload = new JSONObject();
-						payload.put("type", command[1]);
-						payload.put("length", command[2]);
-						payload.put("planner", planner.id);
-						writeJson.put("payload", payload);
-						output.write(writeJson.toString() + "\n");
-						output.flush();
-						line = reader.readLine();
-						readerJson = new JSONObject(line);
-						System.out.println(readerJson.toString());
-					}
-					else {
-						System.out.println("{\"message\":\"Once oturum acmalisiniz\",\"status\":\"401\"}");
-					}
-				}
-			}
-			else if(planner.isLoggedIn && command[0].compareTo("STATUS") == 0) {
-				if(command.length != 2) {
-					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
-				}
-				else {
-					if(planner.isLoggedIn) {
-						JSONObject payload = new JSONObject();
-						payload.put("machineId", command[1]);
-						writeJson.put("payload", payload);
-						output.write(writeJson.toString() + "\n");
-						output.flush();
-						line = reader.readLine();
-						readerJson = new JSONObject(line);
-						JSONObject responsePayload = readerJson.getJSONObject("payload");
-						JSONArray list = responsePayload.getJSONArray("list");
-						System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t%s\t\t%s\n", "Id", "Planlamacý Id", "Makine Id", "Tur", "Uzunluk", "Durum");
-						System.out.println("-------------------------------------------------------------------------------------------------------------------------");
-						for (int i = 0; i < list.length(); i++) {
-							JSONObject job = (JSONObject) list.get(i);
-							System.out.printf("%s\t\t%s\t\t\t%s\t\t\t%s\t\t%s\t\t%s\n", job.get("id"), job.get("plannerId"), job.get("machineId"), job.get("type"), job.get("length"), job.get("status"));	
-						}
-					}
-					else {
-						System.out.println("{\"message\":\"Once oturum acmalisiniz\",\"status\":\"401\"}");
-					}
-				}
-			}
-			else if(planner.isLoggedIn && command[0].compareTo("PENDING") == 0) {
-				if(command.length != 2) {
-					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
-				}
-				else {
-					if(planner.isLoggedIn) {
-						JSONObject payload = new JSONObject();
-						payload.put("type", command[1]);
-						writeJson.put("payload", payload);
-						output.write(writeJson.toString() + "\n");
-						output.flush();
-						line = reader.readLine();
-						readerJson = new JSONObject(line);
-						JSONObject responsePayload = readerJson.getJSONObject("payload");
-						JSONArray list = responsePayload.getJSONArray("list");
-						System.out.printf("%s\t\t%s\t\t%s\t\t%s\t\t%s\t\t%s\n", "Id", "Planlamacý Id", "Makine Id", "Tur", "Uzunluk", "Durum");
-						System.out.println("-------------------------------------------------------------------------------------------------------------------------");
-						for (int i = 0; i < list.length(); i++) {
-							JSONObject job = (JSONObject) list.get(i);
-							System.out.printf("%s\t\t%s\t\t\t%s\t\t\t%s\t\t%s\t\t%s\n", job.get("id"), job.get("plannerId"), job.get("machineId"), job.get("type"), job.get("length"), job.get("status"));	
-						}
-					}
-					else {
-						System.out.println("{\"message\":\"Once oturum acmalisiniz\",\"status\":\"401\"}");
-					}
+					System.out.println("Once oturum acmalisiniz.");
 				}
 			}
 		} while(command[0].compareTo("CLOSE") != 0);

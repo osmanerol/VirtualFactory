@@ -102,8 +102,8 @@ public class ClientThread extends Thread {
 							output.flush();
 							break;
 						default:
-							writeJson.put("status", "400");
-							writeJson.put("message", "Girilen istek bulunamadi");
+							writeJson.put("status", "404");
+							writeJson.put("message", "Girilen komut bulunamadi");
 							output.write(writeJson.toString() + "\n");
 							output.flush();
 							break;
@@ -293,8 +293,8 @@ public class ClientThread extends Thread {
 							output.flush();
 							break;
 						default:
-							writeJson.put("status", "400");
-							writeJson.put("message", "Girilen istek bulunamadi");
+							writeJson.put("status", "404");
+							writeJson.put("message", "Girilen komut bulunamadi");
 							output.write(writeJson.toString() + "\n");
 							output.flush();
 							break;

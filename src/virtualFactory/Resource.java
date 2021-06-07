@@ -1,17 +1,10 @@
 package virtualFactory;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.Condition;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashMap;
 
 public class Resource implements Buffer {
 	
-	private final Lock accessLock = new ReentrantLock();
-	private final Condition canWrite = this.accessLock.newCondition();
-	private final Condition canRead = this.accessLock.newCondition();
 	private static ArrayList<Machine> machineList = new ArrayList<Machine>();
 	private User[] plannerList = {new User("1", "admin1", "password1", false), new User("2", "admin2", "password2", false), new User("3", "admin3", "password3", false)};
 	private static ArrayList<Job> jobList = new ArrayList<Job>();

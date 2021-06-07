@@ -1,5 +1,4 @@
 package virtualFactory;
-import org.json.JSONException;
 import org.json.*;
 import java.io.*;
 import java.net.*;
@@ -42,13 +41,14 @@ public class Machine extends Thread {
 			writeJson.put("type", 1);
 			if(command[0].compareTo("CREATE") == 0) {
 				if(command.length != 4) {
-					System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
+					//System.out.println("{\"message\":\"Girilen komut hatali\",\"status\":\"400\"}");
+					System.out.println("Hatali komut girdiniz.");
 				}
 				else {
 					machine.name = command[1];
 					machine.type = command[2];
 					machine.speed = Float.parseFloat(command[3]);
-					System.out.println("{\"message\":\"Makine olusturuldu\",\"status\":\"201\"}");
+					System.out.println("Makine olusturuldu.");
 				}
 			}
 			else if(command[0].compareTo("CONNECT") == 0) {
@@ -91,18 +91,14 @@ public class Machine extends Thread {
 					System.out.println(readerJson.toString());
 				} while(true);
 			}
-		} while(command[0].compareTo("CLOSE") != 0);
-			/*
-			else if(command[0].compareTo("CLOSE") == 0) {
+			else {
 				output.write(writeJson.toString() + "\n");
 				output.flush();
 				line = reader.readLine();
 				readerJson = new JSONObject(line);
-				machine.isConnected = false;
 				System.out.println(readerJson.toString());
 			}
 		} while(command[0].compareTo("CLOSE") != 0);
-		*/
 		socket.close();
 		System.exit(1);
 	}
